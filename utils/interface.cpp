@@ -34,14 +34,22 @@ void Interface::Render()
     ImGui::NewFrame();
 
     static bool show_demo = true;
-    static int click_count = 0;
-    ImGui::Begin("Example Window");
-    if (ImGui::Button("Click Me!"))
-        click_count++;
+    static bool open = true;
+    if (open)
+    {
+        ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(200, 80), ImGuiCond_Once);
+        ImGui::Begin("Overlay Controls", &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-    ImGui::Text("Button clicked %d times", click_count);
-    ImGui::Checkbox("Show ImGui Demo", &show_demo);
-    ImGui::End();
+        if (ImGui::Button("Close Overlay"))
+        {
+            open = false;
+            PostQuitMessage(0);
+        }
+
+        ImGui::Checkbox("Show ImGui Demo", &show_demo);
+        ImGui::End();
+    }
 
     if (show_demo)
         ImGui::ShowDemoWindow(&show_demo);

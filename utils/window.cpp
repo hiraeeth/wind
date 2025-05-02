@@ -19,12 +19,13 @@ bool Window::Create(HINSTANCE hInstance, int nCmdShow)
     RegisterClassExW(&wc);
 
     RECT wr = {0, 0, m_width, m_height};
-    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+    AdjustWindowRect(&wr, WS_POPUP, FALSE);
 
-    m_hwnd = CreateWindowW(
+    m_hwnd = CreateWindowExW(
+        WS_EX_LAYERED,
         L"WindClass",
         m_title.c_str(),
-        WS_OVERLAPPEDWINDOW,
+        WS_POPUP,
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         wr.right - wr.left, wr.bottom - wr.top,

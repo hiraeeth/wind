@@ -7,49 +7,111 @@ Renderer::~Renderer()
     Shutdown();
 }
 
-bool Renderer::Initialize(HWND hwnd)
+bool Renderer::Initialize(HWND hwnd, int width, int height)
 {
     m_hwnd = hwnd;
-    DXGI_SWAP_CHAIN_DESC sd = {};
-    sd.BufferCount = 2;
-    sd.BufferDesc.Width = 0;
-    sd.BufferDesc.Height = 0;
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = hwnd;
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = TRUE;
-    sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    m_width = width;
+    m_height = height;
 
     UINT createDeviceFlags = 0;
     D3D_FEATURE_LEVEL featureLevel;
     const D3D_FEATURE_LEVEL featureLevelArray[1] = {D3D_FEATURE_LEVEL_11_0};
-    if (FAILED(D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 1,
-                                             D3D11_SDK_VERSION, &sd, &m_swapChain, &m_device, &featureLevel, &m_context)))
+    if (FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 1,
+                                 D3D11_SDK_VERSION, &m_device, &featureLevel, &m_context)))
         return false;
 
-    ID3D11Texture2D *pBackBuffer = nullptr;
-    m_swapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    m_device->CreateRenderTargetView(pBackBuffer, nullptr, &m_renderTargetView);
-    pBackBuffer->Release();
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = m_width;
+    desc.Height = m_height;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = 0;
 
+    if (FAILED(m_device->CreateTexture2D(&desc, nullptr, &m_renderTarget)))
+        return false;
+
+    if (FAILED(m_device->CreateRenderTargetView(m_renderTarget, nullptr, &m_renderTargetView)))
+        return false;
+
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    if (FAILED(m_device->CreateTexture2D(&desc, nullptr, &m_stagingTexture)))
+        return false;
+
+    m_pixelBuffer = nullptr;
     return true;
 }
 
 void Renderer::BeginFrame()
 {
-    const float clearColor[4] = {0.10f, 0.10f, 0.12f, 1.00f};
+    const float clearColor[4] = {0, 0, 0, 0};
     m_context->OMSetRenderTargets(1, &m_renderTargetView, nullptr);
     m_context->ClearRenderTargetView(m_renderTargetView, clearColor);
 }
 
 void Renderer::EndFrame()
 {
-    m_swapChain->Present(1, 0);
+    m_context->CopyResource(m_stagingTexture, m_renderTarget);
+    D3D11_MAPPED_SUBRESOURCE mapped = {};
+    if (SUCCEEDED(m_context->Map(m_stagingTexture, 0, D3D11_MAP_READ, 0, &mapped)))
+    {
+        m_pixelBuffer = mapped.pData;
+        m_rowPitch = mapped.RowPitch;
+    }
+}
+
+void Renderer::Resize(int width, int height)
+{
+    if (!m_device || !m_context)
+        return;
+
+    if (m_renderTargetView)
+    {
+        m_renderTargetView->Release();
+        m_renderTargetView = nullptr;
+    }
+
+    if (m_renderTarget)
+    {
+        m_renderTarget->Release();
+        m_renderTarget = nullptr;
+    }
+
+    if (m_stagingTexture)
+    {
+        m_stagingTexture->Release();
+        m_stagingTexture = nullptr;
+    }
+
+    m_width = width;
+    m_height = height;
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = m_width;
+    desc.Height = m_height;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = 0;
+
+    m_device->CreateTexture2D(&desc, nullptr, &m_renderTarget);
+    m_device->CreateRenderTargetView(m_renderTarget, nullptr, &m_renderTargetView);
+
+    desc.Usage = D3D11_USAGE_STAGING;
+    desc.BindFlags = 0;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+    m_device->CreateTexture2D(&desc, nullptr, &m_stagingTexture);
 }
 
 void Renderer::Shutdown()
@@ -60,10 +122,16 @@ void Renderer::Shutdown()
         m_renderTargetView = nullptr;
     }
 
-    if (m_swapChain)
+    if (m_renderTarget)
     {
-        m_swapChain->Release();
-        m_swapChain = nullptr;
+        m_renderTarget->Release();
+        m_renderTarget = nullptr;
+    }
+
+    if (m_stagingTexture)
+    {
+        m_stagingTexture->Release();
+        m_stagingTexture = nullptr;
     }
 
     if (m_context)
@@ -77,28 +145,6 @@ void Renderer::Shutdown()
         m_device->Release();
         m_device = nullptr;
     }
-}
 
-void Renderer::Resize(int width, int height)
-{
-    if (!m_swapChain || !m_device || !m_context)
-        return;
-
-    if (m_renderTargetView)
-    {
-        m_renderTargetView->Release();
-        m_renderTargetView = nullptr;
-    }
-
-    m_context->OMSetRenderTargets(0, nullptr, nullptr);
-    HRESULT hr = m_swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0);
-
-    if (FAILED(hr))
-        return;
-
-    ID3D11Texture2D *pBackBuffer = nullptr;
-    m_swapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-    m_device->CreateRenderTargetView(pBackBuffer, nullptr, &m_renderTargetView);
-
-    pBackBuffer->Release();
+    m_pixelBuffer = nullptr;
 }
