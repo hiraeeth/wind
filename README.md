@@ -10,26 +10,28 @@
 
 - ⚡ **Ultra-minimal**: Clean, modular C++17 codebase
 - 🖼️ **DirectX 11**: Modern graphics backend
-- 🪟 **Win32 API**: Native window management
+- 🎯 **Win32 API**: Native window management
 - 🎨 **Dear ImGui**: Immediate-mode GUI, easily extensible
 - 🧩 **Modular**: Window, Renderer, and Interface classes
 - 🛠️ **Easy Build**: CMake + batch script for one-command setup
-- 🕶️ **Hidden Window**: Starts invisible, perfect for overlays or background tools
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Windows**
 - [Visual Studio](https://visualstudio.microsoft.com/) (with C++ Desktop Development tools)
 - [DirectX SDK (June 2010)](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
 - [CMake](https://cmake.org/)
 
 ### Build (One Command)
+
 ```sh
 build.bat
 ```
 
 Or manually:
+
 ```sh
 mkdir build
 cd build
@@ -59,6 +61,7 @@ wind/
 ---
 
 ## 🛠️ Extending
+
 - Add your ImGui widgets in `utils/interface.cpp`
 - Customize rendering in `utils/renderer.cpp`
 - Use the modular structure to add new features or backends
@@ -66,6 +69,7 @@ wind/
 ---
 
 ## 🤝 Credits
+
 - [Dear ImGui](https://github.com/ocornut/imgui) by Omar Cornut
 - [Microsoft DirectX 11](https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-graphics)
 
@@ -76,9 +80,9 @@ wind/
 Copyright (c) hiraeeth
 
 > Everyone is free to copy, modify, and use this code for any purpose, **without any requirement to credit the original author**.
-> 
+>
 > _"No credit needed, just build cool things."_
 
 ---
 
-> Made with ❤️ by hiraeeth 
+> Made with ❤️ by hiraeeth
