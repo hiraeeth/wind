@@ -39,7 +39,7 @@ if errorlevel 1 (
 
 echo.
 echo Build completed successfully!
-echo The executable can be found in build\Release\imgui_dx11_example.exe
+echo The executable can be found in build\Release\wind.exe
 echo.
 
 cd ..
