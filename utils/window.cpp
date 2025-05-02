@@ -22,7 +22,7 @@ bool Window::Create(HINSTANCE hInstance, int nCmdShow)
     AdjustWindowRect(&wr, WS_POPUP, FALSE);
 
     m_hwnd = CreateWindowExW(
-        WS_EX_LAYERED,
+        0,
         L"WindClass",
         m_title.c_str(),
         WS_POPUP,

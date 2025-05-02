@@ -15,6 +15,8 @@ void Interface::Initialize(HWND hwnd, ID3D11Device *device, ID3D11DeviceContext 
     ImGui::CreateContext();
 
     ImGuiIO &io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     (void)io;
 
     ImGui::StyleColorsDark();
@@ -33,7 +35,6 @@ void Interface::Render()
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
-    static bool show_demo = true;
     static bool open = true;
     if (open)
     {
@@ -47,15 +48,18 @@ void Interface::Render()
             PostQuitMessage(0);
         }
 
-        ImGui::Checkbox("Show ImGui Demo", &show_demo);
         ImGui::End();
     }
 
-    if (show_demo)
-        ImGui::ShowDemoWindow(&show_demo);
-
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    ImGuiIO &io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
 }
 
 void Interface::Shutdown()
