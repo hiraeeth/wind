@@ -1,0 +1,27 @@
+# Visual Studio files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+Debug/
+Release/
+x64/
+*.pdb
+*.ilk
+*.obj
+*.idb
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.dir/
+build/
+out/
+
+# Compiled files
+*.exe
+*.dll
+*.lib
+*.exp 
